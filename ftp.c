@@ -13,20 +13,42 @@ void init() {
   ftp_state.loop = true;
 }
 
-void read_user_input() {
-  if (scanf(" %[^\n]s", ftp_state.input_buffer) != 1) perror("scanf");
-  ftp_state.input = strtok(ftp_state.input_buffer, " ");
+int read_user_input() {
+  int n;
+  if ((n = scanf(" %[^\n]s", ftp_state.input_buffer)) == 1) {
+    ftp_state.input = strtok(ftp_state.input_buffer, " ");
+  }
+  return n;
 }
 
 void handle_exit() { ftp_state.loop = false; }
 
 void handle_open() {
+  char *hostname;
+  int port = 21;
+
+  // get hostname
   ftp_state.input = strtok(NULL, " ");
   if (!ftp_state.input) {
     printf("(to) ");
     read_user_input();
   }
-  printf("@TODO: open %s:21\n", ftp_state.input);
+
+  // if it was empty, show usage and return
+  if (!ftp_state.input) {
+    printf("usage: open host-name [port]\n");
+    return;
+  }
+
+  hostname = ftp_state.input;
+
+  // get port
+  ftp_state.input = strtok(NULL, " ");
+  if (ftp_state.input) {
+    port = atoi(ftp_state.input);
+  }
+
+  printf("@TODO: open %s:%d\n", hostname, port);
 }
 
 void handle_debugon() {
@@ -54,7 +76,11 @@ int main() {
   while (ftp_state.loop) {
     printf("ftp> "); // displaying prompt
 
-    read_user_input();
+    if (read_user_input() != 1)
+      handle_exit();
+
+    if (!ftp_state.input)
+      continue;
 
     if (STR_EQ(ftp_state.input, "exit"))
       handle_exit();

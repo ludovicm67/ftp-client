@@ -15,7 +15,7 @@ struct ftp_state {
 struct ftp_state ftp_state;
 
 void init();
-void read_user_input();
+int read_user_input();
 void handle_exit();
 void handle_open();
 void handle_debugon();
