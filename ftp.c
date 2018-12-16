@@ -14,7 +14,7 @@ void init() {
 }
 
 void read_user_input() {
-  scanf(" %[^\n]s", ftp_state.input_buffer);
+  if (scanf(" %[^\n]s", ftp_state.input_buffer) != 1) perror("scanf");
   ftp_state.input = strtok(ftp_state.input_buffer, " ");
 }
 
