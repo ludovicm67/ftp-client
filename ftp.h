@@ -8,9 +8,18 @@
 
 struct ftp_state {
   char input_buffer[BUFF_SIZE];
+  char *input;
   bool debug;
   bool loop;
 };
 struct ftp_state ftp_state;
+
+void init();
+void read_user_input();
+void handle_exit();
+void handle_open();
+void handle_debugon();
+void handle_debugoff();
+void handle_debug();
 
 #endif
