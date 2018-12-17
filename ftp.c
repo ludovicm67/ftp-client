@@ -1,16 +1,15 @@
 #include "ftp.h"
-#include <arpa/inet.h>
-#include <netdb.h>
+#include "network.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 
 void init() {
   ftp_state.debug = true;
   ftp_state.loop = true;
+  ftp_state.control_fd = -1;
+  ftp_state.data_fd = -1;
 }
 
 int read_user_input() {
@@ -49,6 +48,10 @@ void handle_open() {
   }
 
   printf("@TODO: open %s:%d\n", hostname, port);
+
+  fetch_addr_infos(hostname);
+  if (!ftp_state.infos) return;
+  init_sockets();
 }
 
 void handle_debugon() {

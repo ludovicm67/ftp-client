@@ -11,6 +11,9 @@ struct ftp_state {
   char *input;
   bool debug;
   bool loop;
+  struct addrinfo * infos;
+  int control_fd;
+  int data_fd;
 };
 struct ftp_state ftp_state;
 
