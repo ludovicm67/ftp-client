@@ -4,6 +4,6 @@
 #include <netdb.h>
 
 void fetch_addr_infos(char *host);
-void init_sockets();
+void init_sockets(int port);
 
 #endif

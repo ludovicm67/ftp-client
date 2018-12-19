@@ -47,11 +47,14 @@ void handle_open() {
     port = atoi(ftp_state.input);
   }
 
-  printf("@TODO: open %s:%d\n", hostname, port);
+  if (ftp_state.debug) {
+    printf("DEBUG: opening connection on %s:%d...\n", hostname, port);
+  }
 
   fetch_addr_infos(hostname);
-  if (!ftp_state.infos) return;
-  init_sockets();
+  if (!ftp_state.infos)
+    return;
+  init_sockets(port);
 }
 
 void handle_debugon() {
@@ -77,7 +80,7 @@ int main() {
   printf("Welcome to FTP Client!\n");
 
   while (ftp_state.loop) {
-    printf("ftp> "); // displaying prompt
+    PROMPT();
 
     if (read_user_input() != 1)
       handle_exit();
