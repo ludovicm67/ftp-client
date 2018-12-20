@@ -3,12 +3,14 @@
 
 #include <stdbool.h>
 
-#define BUFF_SIZE 1024
+#define BUFF_SIZE 2048
 #define STR_EQ(str1, str2) !strcmp(str1, str2)
 #define PROMPT() printf("ftp> ")
+#define PROMPT_STR(str) printf("ftp:%s> ", str)
 
 struct ftp_state {
   char input_buffer[BUFF_SIZE];
+  char *hostname;
   char *input;
   bool debug;
   bool loop;

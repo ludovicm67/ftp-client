@@ -6,7 +6,7 @@
 #include <string.h>
 
 void init() {
-  ftp_state.debug = true;
+  ftp_state.debug = false;
   ftp_state.loop = true;
   ftp_state.control_fd = -1;
   ftp_state.data_fd = -1;
@@ -47,13 +47,14 @@ void handle_open() {
     port = atoi(ftp_state.input);
   }
 
-  if (ftp_state.debug) {
-    printf("DEBUG: opening connection on %s:%d...\n", hostname, port);
-  }
-
   fetch_addr_infos(hostname);
   if (!ftp_state.infos)
     return;
+
+  if (ftp_state.debug) {
+    printf("DEBUG: opening connection on %s:%d...\n", ftp_state.hostname, port);
+  }
+
   init_sockets(port);
 }
 

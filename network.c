@@ -12,6 +12,7 @@
 void fetch_addr_infos(char *host) {
   struct addrinfo hints, *res;
 
+  ftp_state.hostname = host;
   ftp_state.infos = NULL;
 
   memset(&hints, 0, sizeof(hints));
@@ -29,14 +30,34 @@ void fetch_addr_infos(char *host) {
     return;
   }
 
+  if (res->ai_canonname && strlen(res->ai_canonname))
+    ftp_state.hostname = res->ai_canonname;
+
   ftp_state.infos = res;
 }
 
+void handle_answer() {
+  char read_buf[BUFF_SIZE];
+  bzero(read_buf, BUFF_SIZE);
+
+  // get answer
+  if (recv(ftp_state.control_fd, read_buf, BUFF_SIZE, 0) < 0) {
+    printf("cannot read socket\n");
+    return;
+  }
+
+  // print it if we are in debug mode
+  if (ftp_state.debug)
+    printf("%s", read_buf);
+
+  ftp_state.last_code = atoi(read_buf);
+}
+
 bool send_control(char *cmd, char *str) {
-  char write_buf[2048];
-  char read_buf[2048];
-  bzero(write_buf, 2048);
-  bzero(read_buf, 2048);
+  char write_buf[BUFF_SIZE];
+  char read_buf[BUFF_SIZE];
+  bzero(write_buf, BUFF_SIZE);
+  bzero(read_buf, BUFF_SIZE);
 
   if (ftp_state.control_fd < 0)
     return false;
@@ -53,16 +74,37 @@ bool send_control(char *cmd, char *str) {
     return false;
   }
 
-  // just print answer
-  if (recv(ftp_state.control_fd, read_buf, 2048, 0) < 0) {
-    printf("cannot read socket\n");
-    return false;
-  }
-  printf("%s", read_buf);
-
-  ftp_state.last_code = atoi(read_buf);
+  handle_answer();
 
   return true;
+}
+
+void handle_user() {
+  // ask for name
+  printf("Name: ");
+  if (read_user_input() != 1)
+    return;
+  if (!send_control("USER", ftp_state.input) || ftp_state.last_code != 331)
+    return;
+
+  // ask for password if required
+  printf("Password: ");
+  if (read_user_input() != 1)
+    return;
+  if (!send_control("PASS", ftp_state.input))
+    return;
+  if (ftp_state.last_code == 230)
+    printf("user authenticated successfully!\n");
+  else if (ftp_state.last_code == 530)
+    printf("bad credentials!\n");
+  if (ftp_state.last_code != 332)
+    return;
+
+  // ask for account if required
+  printf("Account: ");
+  if (read_user_input() != 1)
+    return;
+  send_control("ACCT", ftp_state.input);
 }
 
 void init_sockets(int port) {
@@ -101,36 +143,15 @@ void init_sockets(int port) {
 
   bool asked_exit = false;
   bool loop = true;
-  char read_buf[2048];
-  char write_buf[2048];
 
-  bzero(read_buf, 2048);
-  bzero(write_buf, 2048);
+  // display welcome message
+  handle_answer();
 
-  // just print welcome message
-  if (recv(control_fd, read_buf, 2048, 0) < 0) {
-    printf("cannot read socket\n");
-    return;
-  }
-  printf("%s", read_buf);
-
-  printf("Name: ");
-  if (read_user_input() != 1)
-    return;
-  if (send_control("USER", ftp_state.input) && ftp_state.last_code == 331) {
-    printf("Password: ");
-    if (read_user_input() != 1)
-      return;
-    if (send_control("PASS", ftp_state.input) && ftp_state.last_code == 332) {
-      printf("Account: ");
-      if (read_user_input() != 1)
-        return;
-      send_control("ACCT", ftp_state.input);
-    }
-  }
+  // ask user credentials
+  handle_user();
 
   while (loop) {
-    PROMPT();
+    PROMPT_STR(ftp_state.hostname);
 
     if (read_user_input() != 1) {
       asked_exit = true;
@@ -149,9 +170,13 @@ void init_sockets(int port) {
       loop = false;
       break;
     } else if (STR_EQ(ftp_state.input, "open")) {
-      printf("connection is already set. please use the 'ciao' command before "
-             "login to another server.\n");
-      break;
+      printf(
+          "connection is already started. please use the 'ciao' command before "
+          "login to another server.\n");
+    } else if (STR_EQ(ftp_state.input, "dir")) {
+      send_control("LIST", "");
+    } else if (STR_EQ(ftp_state.input, "user")) {
+      handle_user();
     }
 
     else if (STR_EQ(ftp_state.input, "debugon"))
@@ -164,6 +189,8 @@ void init_sockets(int port) {
       printf("?Invalid command\n");
     }
   }
+
+  send_control("QUIT", "");
 
   close(control_fd);
   ftp_state.control_fd = -1;
