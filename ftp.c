@@ -10,6 +10,7 @@ void init() {
   ftp_state.loop = true;
   ftp_state.control_fd = -1;
   ftp_state.data_fd = -1;
+  ftp_state.is_passive = false;
 }
 
 int read_user_input() {

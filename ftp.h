@@ -10,10 +10,12 @@
 
 struct ftp_state {
   char input_buffer[BUFF_SIZE];
+  char read_buf[BUFF_SIZE];
   char *hostname;
   char *input;
   bool debug;
   bool loop;
+  bool is_passive;
   struct addrinfo *infos;
   int control_fd;
   int data_fd;
