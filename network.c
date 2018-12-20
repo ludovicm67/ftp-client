@@ -91,7 +91,8 @@ bool send_control_nowait(char *cmd, char *str) {
 }
 
 bool send_control(char *cmd, char *str) {
-  if (!send_control_nowait(cmd, str)) return false;
+  if (!send_control_nowait(cmd, str))
+    return false;
   handle_answer();
   return true;
 }
@@ -125,7 +126,8 @@ void handle_user() {
 }
 
 void close_data_socket() {
-  if (ftp_state.data_fd < 0) return;
+  if (ftp_state.data_fd < 0)
+    return;
   close(ftp_state.data_fd);
   ftp_state.data_fd = -1;
 }
@@ -141,7 +143,7 @@ void create_data_socket() {
 
 void active_data_socket() {
   create_data_socket();
-  struct sockaddr * s;
+  struct sockaddr *s;
   struct sockaddr_in s4;
   struct sockaddr_in6 s6;
   int len;
@@ -153,13 +155,13 @@ void active_data_socket() {
     s6.sin6_addr = in6addr_any;
     s6.sin6_port = htons(0);
     s6.sin6_flowinfo = 0;
-    s = (struct sockaddr *) &s6;
+    s = (struct sockaddr *)&s6;
     len = sizeof(struct sockaddr_in6);
   } else {
     s4.sin_family = AF_INET;
     s4.sin_addr.s_addr = INADDR_ANY;
     s4.sin_port = htons(0);
-    s = (struct sockaddr *) &s4;
+    s = (struct sockaddr *)&s4;
     len = sizeof(struct sockaddr_in);
   }
 
@@ -176,12 +178,14 @@ void active_data_socket() {
     struct sockaddr_in6 s_in;
     char a[INET6_ADDRSTRLEN];
     socklen_t s_len = sizeof(s_in);
-    if (getsockname(ftp_state.data_fd, (struct sockaddr *)&s_in, &s_len) == -1) {
+    if (getsockname(ftp_state.data_fd, (struct sockaddr *)&s_in, &s_len) ==
+        -1) {
       perror("getsockname");
       return;
     }
     p = ntohs(s_in.sin6_port);
-    if (getsockname(ftp_state.control_fd, (struct sockaddr *)&s_in, &s_len) == -1) {
+    if (getsockname(ftp_state.control_fd, (struct sockaddr *)&s_in, &s_len) ==
+        -1) {
       perror("getsockname");
       return;
     }
@@ -194,21 +198,23 @@ void active_data_socket() {
     struct sockaddr_in s_in;
     socklen_t s_len = sizeof(s_in);
 
-    if (getsockname(ftp_state.control_fd, (struct sockaddr *)&s_in, &s_len) == -1) {
+    if (getsockname(ftp_state.control_fd, (struct sockaddr *)&s_in, &s_len) ==
+        -1) {
       perror("getsockname");
       return;
     }
 
-    char * ip = inet_ntoa(s_in.sin_addr);
+    char *ip = inet_ntoa(s_in.sin_addr);
     int i1, i2, i3, i4;
     sscanf(ip, "%d.%d.%d.%d", &i1, &i2, &i3, &i4);
 
-    if (getsockname(ftp_state.data_fd, (struct sockaddr *)&s_in, &s_len) == -1) {
+    if (getsockname(ftp_state.data_fd, (struct sockaddr *)&s_in, &s_len) ==
+        -1) {
       perror("getsockname");
       return;
     }
     p0 = ntohs(s_in.sin_port);
-    p1 = (int) (p0 / 256);
+    p1 = (int)(p0 / 256);
     p2 = p0 % 256;
 
     sprintf(port, "%d,%d,%d,%d,%d,%d", i1, i2, i3, i4, p1, p2);
@@ -219,7 +225,7 @@ void active_data_socket() {
 
 void passive_data_socket() {
   create_data_socket();
-  struct sockaddr * s;
+  struct sockaddr *s;
   struct sockaddr_in s4;
   struct sockaddr_in6 s6;
   int i;
@@ -227,7 +233,7 @@ void passive_data_socket() {
   int port;
   int p1;
   int p2;
-  char * ptr;
+  char *ptr;
   int buf_len;
 
   ftp_state.is_passive = true;
@@ -238,7 +244,8 @@ void passive_data_socket() {
     buf_len = strlen(ftp_state.read_buf);
 
     for (i = buf_len - 2; i >= 0; i--) {
-      if (ftp_state.read_buf[i] < '0' || ftp_state.read_buf[i] > '9') break;
+      if (ftp_state.read_buf[i] < '0' || ftp_state.read_buf[i] > '9')
+        break;
     }
 
     ptr += i;
@@ -249,14 +256,16 @@ void passive_data_socket() {
     buf_len = strlen(ftp_state.read_buf);
 
     for (i = buf_len - 2; i >= 0; i--) {
-      if (ftp_state.read_buf[i] < '0' || ftp_state.read_buf[i] > '9') break;
+      if (ftp_state.read_buf[i] < '0' || ftp_state.read_buf[i] > '9')
+        break;
     }
 
     ptr += i;
     p1 = atoi(ptr);
 
     for (i = i - 1; i >= 0; i--) {
-      if (ftp_state.read_buf[i] < '0' || ftp_state.read_buf[i] > '9') break;
+      if (ftp_state.read_buf[i] < '0' || ftp_state.read_buf[i] > '9')
+        break;
     }
 
     ptr = ftp_state.read_buf;
