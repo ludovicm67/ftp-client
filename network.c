@@ -112,14 +112,24 @@ void init_sockets(int port) {
   struct sockaddr_in s4;
   struct sockaddr_in6 s6;
   int len;
-  int control_fd = socket(ftp_state.infos->ai_family, SOCK_STREAM, 0);
-  if (control_fd < 0) {
-    perror("socket");
+  bool asked_exit = false;
+  bool loop = true;
+
+  // create control socket
+  ftp_state.control_fd = socket(ftp_state.infos->ai_family, SOCK_STREAM, 0);
+  if (ftp_state.control_fd < 0) {
+    perror("control socket");
     return;
   }
 
-  ftp_state.control_fd = control_fd;
+  // create data socket
+  ftp_state.data_fd = socket(ftp_state.infos->ai_family, SOCK_STREAM, 0);
+  if (ftp_state.data_fd < 0) {
+    perror("data socket");
+    return;
+  }
 
+  // complete the struct to connect to the server
   if (ftp_state.infos->ai_family == AF_INET6) {
     s6.sin6_family = AF_INET6;
     s6.sin6_addr = ((struct sockaddr_in6 *)ftp_state.infos->ai_addr)->sin6_addr;
@@ -136,13 +146,11 @@ void init_sockets(int port) {
     len = sizeof(struct sockaddr_in);
   }
 
-  if (connect(control_fd, s, len) < 0) {
+  // connect to the server
+  if (connect(ftp_state.control_fd, s, len) < 0) {
     perror("connect");
     return;
   }
-
-  bool asked_exit = false;
-  bool loop = true;
 
   // display welcome message
   handle_answer();
@@ -192,8 +200,11 @@ void init_sockets(int port) {
 
   send_control("QUIT", "");
 
-  close(control_fd);
+  // close sockets
+  close(ftp_state.control_fd);
+  close(ftp_state.data_fd);
   ftp_state.control_fd = -1;
+  ftp_state.data_fd = -1;
 
   if (asked_exit)
     handle_exit();
