@@ -60,7 +60,7 @@ void handle_data_answer() {
 
   // get answer
   if (recv(fd, read_buf, BUFF_SIZE, 0) < 0) {
-    printf("cannot read socket\n");
+    printf("cannot read data socket\n");
     return;
   }
   printf("%s", read_buf);
@@ -231,8 +231,6 @@ void passive_data_socket() {
   int i;
   int len;
   int port;
-  int p1;
-  int p2;
   char *ptr;
   int buf_len;
 
@@ -252,27 +250,14 @@ void passive_data_socket() {
     port = atoi(ptr);
   } else {
     send_control("PASV", "");
-    ptr = ftp_state.read_buf;
     buf_len = strlen(ftp_state.read_buf);
 
-    for (i = buf_len - 2; i >= 0; i--) {
-      if (ftp_state.read_buf[i] < '0' || ftp_state.read_buf[i] > '9')
-        break;
-    }
+    int i0, i1, i2, i3, i4, i5, i6;
+    char s1[20], s2[20], s3[20];
+    sscanf(ftp_state.read_buf, "%d %s %s %s (%d,%d,%d,%d,%d,%d)", &i0, s1, s2,
+           s3, &i1, &i2, &i3, &i4, &i5, &i6);
 
-    ptr += i;
-    p1 = atoi(ptr);
-
-    for (i = i - 1; i >= 0; i--) {
-      if (ftp_state.read_buf[i] < '0' || ftp_state.read_buf[i] > '9')
-        break;
-    }
-
-    ptr = ftp_state.read_buf;
-    ptr += i;
-    p2 = atoi(ptr);
-
-    port = p2 * 256 + p1;
+    port = i5 * 256 + i6;
   }
 
   // complete the struct to connect to the server
@@ -293,7 +278,7 @@ void passive_data_socket() {
   }
 
   // connect to the server
-  if (connect(ftp_state.control_fd, s, len) < 0) {
+  if (connect(ftp_state.data_fd, s, len) < 0) {
     perror("connect");
     return;
   }

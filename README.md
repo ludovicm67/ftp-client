@@ -1,6 +1,8 @@
 FTP client
 ==========
 
+Developped by Ludovic Muller.
+
 This FTP client supports IPv4 and IPv6 connections.
 
 Supported commands:
